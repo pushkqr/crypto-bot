@@ -1,0 +1,8 @@
+find_trending_coins:
+  description: >
+    You read the latest news, then find 2-3 cryptocurrency coins that are trending in the news for further research.
+    Don't pick the same coin twice.
+  expected_output: >
+    A list of trending cryptocurrency coins.
+  agent: trending_coin_finder
+  output_file: output/trending_coins.json
