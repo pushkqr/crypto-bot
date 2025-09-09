@@ -8,7 +8,7 @@ from pydantic import BaseModel, Field
 class Coin(BaseModel):
     """Represents a cryptocurrency"""
     name: str = Field(..., description="Full name of the cryptocurrency, e.g., Bitcoin")
-    symbol: str = Field(..., description="Ticker symbol of the coin, e.g., BTC")
+    symbol: str = Field(description="Ticker symbol of the coin, e.g., BTC")
     reason: str = Field(description="Reason this coin is trending in the news")
 
 
