@@ -6,3 +6,64 @@ find_trending_coins:
     A list of trending cryptocurrency coins.
   agent: trending_coin_finder
   output_file: output/trending_coins.json
+
+pick_best_coin:
+  description: >
+    Analyze the research findings and select the **best coin** for potential investment.
+    Send a push notification to the user with the chosen coin and a 1-sentence rationale.
+    Then provide a detailed report explaining:
+      - why this coin was selected,
+      - the expected short-term and long-term outlook,
+      - and why the other shortlisted coins were not chosen.
+  expected_output: >
+    The chosen coin and justification
+  agent: coin_picker
+  context:
+    - find_trending_coins
+  output_file: output/investment_decision.md
+
+ideate_strategy:
+  description: >
+    Generate a unique and actionable trading strategy for the shortlisted trending cryptocurrency.
+    The strategy must be compatible with backtesting using historical OHLCV data enriched with technical indicators
+    (EMA, SMA, RSI, MACD, Bollinger Bands, ATR, VWAP). 
+
+    The entry_rules and exit_rules **must be valid Python Pandas expressions** that evaluate to boolean Series 
+    when run against a DataFrame named `df`. Do not provide plain English descriptions in these fields. 
+
+    Always provide the coin symbol in USDT format (e.g., BTC → BTCUSDT, ETH → ETHUSDT).
+  expected_output: >
+    A JSON strategy object:
+      - strategy_id: unique identifier for the strategy
+      - coin_symbol: ticker symbol of the coin (must end with USDT)
+      - entry_rules: Python Pandas expression for entry conditions (returns a boolean Series)
+      - exit_rules: Python Pandas expression for exit conditions (returns a boolean Series)
+      - stop_loss: stop-loss percentage (0-100)
+      - take_profit: take-profit percentage (0-100)
+      - allocation: portfolio allocation percentage (0-100)
+  agent: ideator
+  context:
+    - pick_best_coin
+  output_file: output/strategy.json
+
+backtest_strategy:
+  description: >
+    Given a trading strategy, fetch the required OHLCV data and prepare it for backtesting.
+    Rules for default data range:
+      - If timeframe is missing, default to 1h.
+      - If start_date is missing, calculate it dynamically based on timeframe:
+          * 15m → last 90 days  (~8,600 candles)
+          * 1h  → last 180 days (~4,300 candles)
+          * 4h  → last 365 days (~2,200 candles)
+          * 1d  → last 730 days (~730 candles)
+      - Always set today's date as end_date if missing.
+      - Ensure coin symbol is always formatted as USDT (e.g., BTC → BTCUSDT).
+      - Always fetch enough data to support long-term indicators like EMA_200, SMA_200, and MACD.
+  expected_output: >
+    JSON response:
+      - ohlcv_csv_path: Path to the saved OHLCV CSV file.
+  agent: backtester
+  context:
+    - ideate_strategy
+  output_file: output/backtest_data.json
+
