@@ -1,54 +1,76 @@
-# Crypto Crew
+# Crypto-Bot
 
-Welcome to the Crypto Crew project, powered by [crewAI](https://crewai.com). This template is designed to help you set up a multi-agent AI system with ease, leveraging the powerful and flexible framework provided by crewAI. Our goal is to enable your agents to collaborate effectively on complex tasks, maximizing their collective intelligence and capabilities.
+Crypto-Bot is an AI-powered cryptocurrency research and backtesting framework, leveraging multi-agent capabilities to generate, evaluate, and optimize trading strategies. Built on [crewAI](https://crewai.com), Crypto-Bot allows agents to collaborate on complex tasks, from picking trending coins to generating backtest-ready strategies.
+
+## Features
+
+* **Trending Coin Finder** – Identifies promising coins from news, market reports, and social sentiment.
+* **Strategy Ideator** – Generates actionable trading strategies using technical indicators like EMA, SMA, RSI, MACD, Bollinger Bands, ATR, and VWAP.
+* **Backtester** – Simulates strategy performance using historical OHLCV data, calculates metrics such as profit, drawdown, Sharpe ratio, and provides recommendations.
+* **Iterative Refinement** – Backtester can trigger strategy modifications until a satisfactory result is achieved.
+* **Structured Outputs** – Returns concise, structured performance metrics compatible with automation.
 
 ## Installation
 
-Ensure you have Python >=3.10 <3.14 installed on your system. This project uses [UV](https://docs.astral.sh/uv/) for dependency management and package handling, offering a seamless setup and execution experience.
+Ensure Python >= 3.10 < 3.14 is installed. This project uses [UV](https://docs.astral.sh/uv/) for package management.
 
-First, if you haven't already, install uv:
+Install `uv`:
 
 ```bash
 pip install uv
 ```
 
-Next, navigate to your project directory and install the dependencies:
+Navigate to the project directory and install dependencies:
 
-(Optional) Lock the dependencies and install them by using the CLI command:
 ```bash
 crewai install
 ```
-### Customizing
 
-**Add your `OPENAI_API_KEY` into the `.env` file**
+### Environment Variables
 
-- Modify `src/crypto/config/agents.yaml` to define your agents
-- Modify `src/crypto/config/tasks.yaml` to define your tasks
-- Modify `src/crypto/crew.py` to add your own logic, tools and specific args
-- Modify `src/crypto/main.py` to add custom inputs for your agents and tasks
+Create a `.env` file and add your API keys:
 
-## Running the Project
-
-To kickstart your crew of AI agents and begin task execution, run this from the root folder of your project:
-
-```bash
-$ crewai run
+```env
+GEMINI_API_KEY=XX
+SERPER_API_KEY=XX
+TEST_API=XX
+TEST_SECRET=XX
+BINANCE_API_KEY=XX
+BINANCE_API_SECRET=XX
 ```
 
-This command initializes the crypto Crew, assembling the agents and assigning them tasks as defined in your configuration.
+## Configuration
 
-This example, unmodified, will run the create a `report.md` file with the output of a research on LLMs in the root folder.
+* `src/crypto/config/agents.yaml` – Define your agents, roles, and goals.
+* `src/crypto/config/tasks.yaml` – Define tasks and workflows for your agents.
+* `src/crypto/crew.py` – Add custom logic, tools, and arguments for agents.
+* `src/crypto/main.py` – Add custom inputs and run the crew.
 
-## Understanding Your Crew
+## Running Crypto-Bot
 
-The crypto Crew is composed of multiple AI agents, each with unique roles, goals, and tools. These agents collaborate on a series of tasks, defined in `config/tasks.yaml`, leveraging their collective skills to achieve complex objectives. The `config/agents.yaml` file outlines the capabilities and configurations of each agent in your crew.
+Start the AI agents and execute tasks:
+
+```bash
+crewai run
+```
+
+The framework will process trending coins, generate strategies, backtest them, and output structured performance metrics.
+
+## Output
+
+* Backtest results are stored in `output/backtest_data.json`.
+* Metrics include win rate, profit factor, Sharpe ratio, max drawdown, total return, and trade count.
+
+## Contributing
+
+Contributions are welcome!
+
+* Add new indicators or trading strategies.
+* Improve backtesting logic or data handling.
+* Expand agent capabilities for advanced research.
 
 ## Support
 
-For support, questions, or feedback regarding the Crypto Crew or crewAI.
-- Visit our [documentation](https://docs.crewai.com)
-- Reach out to us through our [GitHub repository](https://github.com/joaomdmoura/crewai)
-- [Join our Discord](https://discord.com/invite/X4JWnZnxPb)
-- [Chat with our docs](https://chatg.pt/DWjSBZn)
+* [crewAI Documentation](https://docs.crewai.com)
 
-Let's create wonders together with the power and simplicity of crewAI.
+Harness the power of AI-driven multi-agent research to explore, test, and refine cryptocurrency trading strategies efficiently.
