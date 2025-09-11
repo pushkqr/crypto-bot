@@ -1,9 +1,14 @@
 find_trending_coins:
   description: >
-    You read the latest news, then find 2-3 cryptocurrency coins that are trending in the news for further research.
+    You read the latest news, then find 2-3 cryptocurrency coins that are trending in the news.
     Don't pick the same coin twice.
+    Always verify whether the coin is tradeable on Binance via USDT (e.g., BTCUSDT, ETHUSDT).
+    Prefer established, liquid coins with sufficient trading history (at least several months).
+    Avoid newly listed coins with limited data, as well as illiquid, low-cap, or likely-scam tokens.
+    Exclude stablecoins and memecoins unless explicitly mentioned otherwise.
   expected_output: >
-    A list of trending cryptocurrency coins.
+    A list of 2-3 trending cryptocurrency coins that are tradeable on Binance in USDT pairs,
+    have sufficient historical price data, and are suitable for backtesting.
   agent: trending_coin_finder
   output_file: output/trending_coins.json
 
@@ -15,6 +20,7 @@ pick_best_coin:
       - why this coin was selected,
       - the expected short-term and long-term outlook,
       - and why the other shortlisted coins were not chosen.
+    Return exactly one JSON object, not a list or multiple results.
   expected_output: >
     The chosen coin and justification
   agent: coin_picker
@@ -22,48 +28,61 @@ pick_best_coin:
     - find_trending_coins
   output_file: output/investment_decision.md
 
-ideate_strategy:
-  description: >
-    Generate a unique and actionable trading strategy for the shortlisted trending cryptocurrency.
-    The strategy must be compatible with backtesting using historical OHLCV data enriched with technical indicators
-    (EMA, SMA, RSI, MACD, Bollinger Bands, ATR, VWAP). 
-
-    The entry_rules and exit_rules **must be valid Python Pandas expressions** that evaluate to boolean Series 
-    when run against a DataFrame named `df`. Do not provide plain English descriptions in these fields. 
-
-    Always provide the coin symbol in USDT format (e.g., BTC → BTCUSDT, ETH → ETHUSDT).
-  expected_output: >
-    A JSON strategy object:
-      - strategy_id: unique identifier for the strategy
-      - coin_symbol: ticker symbol of the coin (must end with USDT)
-      - entry_rules: Python Pandas expression for entry conditions (returns a boolean Series)
-      - exit_rules: Python Pandas expression for exit conditions (returns a boolean Series)
-      - stop_loss: stop-loss percentage (0-100)
-      - take_profit: take-profit percentage (0-100)
-      - allocation: portfolio allocation percentage (0-100)
-  agent: ideator
-  context:
-    - pick_best_coin
-  output_file: output/strategy.json
-
 backtest_strategy:
   description: >
-    Given a trading strategy, fetch the required OHLCV data and prepare it for backtesting.
-    Rules for default data range:
-      - If timeframe is missing, default to 1h.
-      - If start_date is missing, calculate it dynamically based on timeframe:
-          * 15m → last 90 days  (~8,600 candles)
-          * 1h  → last 180 days (~4,300 candles)
-          * 4h  → last 365 days (~2,200 candles)
-          * 1d  → last 730 days (~730 candles)
-      - Always set today's date as end_date if missing.
-      - Ensure coin symbol is always formatted as USDT (e.g., BTC → BTCUSDT).
-      - Always fetch enough data to support long-term indicators like EMA_200, SMA_200, and MACD.
+    Generate and backtest a trading strategy for a given coin using enriched OHLCV data.
+
+    Strategy schema (internal use only):
+      - strategy_id: str = Unique identifier
+      - coin_symbol: str = Ticker symbol, must end with USDT
+      - entry_rules: str = Pandas boolean expression with df['colname'] references
+      - exit_rules: str = Same as entry_rules
+      - stop_loss: float = Stop-loss percentage (0–100)
+      - take_profit: float = Take-profit percentage (0–100)
+      - allocation: float = Portfolio allocation percentage (0–100)
+
+    Rules for entry/exit:
+      - All indicator/column references must use df['colname'] syntax (e.g., df['ema_20'] > df['ema_50']).
+      - Allowed columns: open, high, low, close, volume,
+        ema_10,sma_10,ema_20,sma_20,ema_50,sma_50,
+        ema_100,sma_100,ema_200,sma_200,
+        rsi_7,rsi_14,macd,macd_signal,macd_hist,
+        bb_upper,bb_lower,atr_14,vwap.
+      - Boolean logic must use & and | (not and/or).
+      - Wrap conditions in parentheses for operator precedence.
+
+    Steps:
+      1. Normalize trading pair symbol to USDT format.
+      2. Determine timeframe and start date if missing, based on defaults:
+         * 15m → last 90 days (~8,600 candles)
+         * 1h  → last 180 days (~4,300 candles)
+         * 4h  → last 365 days (~2,200 candles)
+         * 1d  → last 730 days (~730 candles)
+      3. Always use today's date as the end date if missing.
+      4. Fetch enriched OHLCV data with all required indicators.
+      5. Append 'ohlcv_csv_path' internally to the strategy object.
+      6. Run the backtest.
+      7. Based on results:
+         - If "Keep" → return only concise structured performance metrics.
+         - If "Modify" → refine the strategy and re-test.
+         - If "Discard" → create a new strategy and re-test.
+      8. Continue until a "Keep" recommendation is found or 5 iterations max.
+      9. If insufficient data exists, return a structured error instead of substituting with another coin.
+
   expected_output: >
-    JSON response:
-      - ohlcv_csv_path: Path to the saved OHLCV CSV file.
+    A structured JSON object with concise backtest performance metrics only:
+      - win_rate: % profitable trades
+      - profit_factor: gross profit ÷ gross loss
+      - sharpe_ratio: risk-adjusted return
+      - max_drawdown: maximum drawdown %
+      - total_return: % return over backtest period
+      - trade_count: number of trades executed
+
+    No raw strategy objects should be returned, only performance metrics.
+
   agent: backtester
   context:
-    - ideate_strategy
+    - pick_best_coin
   output_file: output/backtest_data.json
+
 

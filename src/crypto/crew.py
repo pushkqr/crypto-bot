@@ -1,3 +1,4 @@
+import os
 from crewai import Agent, Crew, Process, Task
 from crewai.project import CrewBase, agent, crew, task
 from crewai.agents.agent_builder.base_agent import BaseAgent
@@ -6,7 +7,8 @@ from crewai_tools import SerperDevTool
 from pydantic import BaseModel, Field
 from .tools.fetch_tool import FetchOHLCVTool
 from .tools.backtest_tool import BacktestTool
-from crewai.memory import LongTermMemory
+from crewai.memory import LongTermMemory, EntityMemory
+from crewai.memory.storage.rag_storage import RAGStorage
 from crewai.memory.storage.ltm_sqlite_storage import LTMSQLiteStorage
 
 class Coin(BaseModel):
@@ -39,7 +41,7 @@ class Crypto():
     def trending_coin_finder(self) -> Agent:
         return Agent(
             config=self.agents_config['trending_coin_finder'],
-            tools=[SerperDevTool()], 
+            tools=[SerperDevTool(n_results=20)], 
             verbose=True
         )
     
@@ -49,20 +51,13 @@ class Crypto():
             config=self.agents_config['coin_picker'],
             verbose=True
         )
-
-    @agent  
-    def ideator(self) -> Agent: 
-        return Agent(
-            config=self.agents_config['ideator'], 
-            verbose=True,  
-        )
     
     @agent 
     def backtester(self) -> Agent: 
         return Agent( 
             config=self.agents_config['backtester'],
             verbose=True, 
-            tools=[FetchOHLCVTool()],
+            tools=[FetchOHLCVTool(), BacktestTool()],
         )
 
     
@@ -79,13 +74,7 @@ class Crypto():
             config=self.tasks_config['pick_best_coin'],
             output_pydantic=Coin
         )
-    
-    @task 
-    def ideate_strategy(self) -> Task: 
-        return Task(
-            config=self.tasks_config['ideate_strategy'],
-            output_pydantic=Strategy
-        )
+
     
     @task 
     def backtest_strategy(self) -> Task: 
@@ -96,19 +85,34 @@ class Crypto():
     @crew
     def crew(self) -> Crew:
         """Creates the Crypto crew"""
-        memory = LongTermMemory(
-            storage=LTMSQLiteStorage(
-                db_path="./memory/ltms.db"
-            )
-        )
+        # long_term_memory = LongTermMemory(
+        #     storage=LTMSQLiteStorage(
+        #         db_path="./memory/ltms.db"
+        #     )
+        # )
 
-        manager = Agent(config=self.agents_config["manager"],verbose=True, allow_delegation=True)
+        # entity_memory = EntityMemory(
+        #     storage = RAGStorage(
+        #         embedder_config={
+        #             "provider": "google",
+        #             "config": {
+        #                 "model": "gemini-embedding-001",
+        #                 "api_key": os.getenv("GEMINI_API_KEY")
+        #             }
+        #         },
+        #         type="short_term",
+        #         path="./memory/"
+        #     ) 
+        # )
+
+        # manager = Agent(config=self.agents_config["manager"],verbose=True, allow_delegation=True)
 
         return Crew(
             agents=self.agents, 
             tasks=self.tasks, 
-            process=Process.hierarchical,
+            process=Process.sequential,
             verbose=True,
-            manager_agent=manager,
-            long_term_memory=memory
+            # manager_agent=manager,
+            # long_term_memory=long_term_memory,
+            # entity_memory=entity_memory
         )

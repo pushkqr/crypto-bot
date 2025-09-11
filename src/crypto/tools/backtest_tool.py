@@ -1,8 +1,9 @@
 import pandas as pd
 import numpy as np
-from typing import Type
+from typing import Type, Dict
 from pydantic import BaseModel, Field
 from crewai.tools import BaseTool
+import os
 
 class StrategyBackTestInput(BaseModel):
     strategy_id: str = Field(description="Unique identifier of the strategy")
@@ -22,14 +23,13 @@ class BacktestTool(BaseTool):
     )
     args_schema: Type[BaseModel] = StrategyBackTestInput
 
-    def _run(self, strategy_id: str, coin_symbol: str, entry_rules: str, exit_rules: str, stop_loss: float, take_profit: float, allocation: float, ohlcv_csv_path: str):
-        
+    def _run(self, strategy_id: str, coin_symbol: str, entry_rules: str, exit_rules: str, stop_loss: float, take_profit: float, allocation: float, ohlcv_csv_path: str) -> Dict[str, str]: 
         if not os.path.exists(ohlcv_csv_path):
             raise FileNotFoundError(f"CSV not found at {ohlcv_csv_path}")
-        df = pd.read_csv(ohlcv_csv_path, parse_dates=True, index_col='timestamp')
-        df['position'] = 0
 
-        # Safe namespace for eval
+        df = pd.read_csv(ohlcv_csv_path, parse_dates=True, index_col="timestamp")
+        df["position"] = 0
+
         safe_ns = {"df": df, "np": np}
 
         entry_signal = pd.Series(eval(entry_rules, {"__builtins__": {}}, safe_ns), index=df.index)
@@ -40,23 +40,49 @@ class BacktestTool(BaseTool):
         cash = 100_000
         equity_curve = []
 
-        for i in range(len(df)):
-            price = df['close'].iloc[i]
+        trades = 0
+        wins = 0
+        losses = 0
+        gross_profit = 0
+        gross_loss = 0
 
+        for i in range(len(df)):
+            price = df["close"].iloc[i]
+
+            # Entry
             if entry_signal.iloc[i] and position == 0:
                 position = (cash * allocation / 100) / price
                 cash -= position * price
                 entry_price = price
 
+            # Exit
             elif exit_signal.iloc[i] and position > 0:
+                pnl = (price - entry_price) / entry_price * 100
+                if pnl > 0:
+                    wins += 1
+                    gross_profit += pnl
+                else:
+                    losses += 1
+                    gross_loss += abs(pnl)
+
+                trades += 1
                 cash += position * price
                 position = 0
                 entry_price = 0
 
+            # Stop-loss / Take-profit
             if position > 0:
-                current_value = position * price
                 drawdown = (price - entry_price) / entry_price * 100
                 if drawdown <= -stop_loss or drawdown >= take_profit:
+                    pnl = (price - entry_price) / entry_price * 100
+                    if pnl > 0:
+                        wins += 1
+                        gross_profit += pnl
+                    else:
+                        losses += 1
+                        gross_loss += abs(pnl)
+
+                    trades += 1
                     cash += position * price
                     position = 0
                     entry_price = 0
@@ -66,7 +92,17 @@ class BacktestTool(BaseTool):
         equity_series = pd.Series(equity_curve, index=df.index)
         profit_percent = (equity_series.iloc[-1] / equity_series.iloc[0] - 1) * 100
         max_drawdown_percent = ((equity_series / equity_series.cummax() - 1).min()) * 100
-        sharpe_ratio = (equity_series.pct_change().mean() / equity_series.pct_change().std()) * np.sqrt(252)
+        daily_returns = equity_series.pct_change().dropna()
+        sharpe_ratio = (
+            (daily_returns.mean() / daily_returns.std()) * np.sqrt(252)
+            if daily_returns.std() != 0
+            else 0
+        )
+
+        win_rate = (wins / trades * 100) if trades > 0 else 0
+        profit_factor = (gross_profit / gross_loss) if gross_loss > 0 else float("inf")
+        total_return = profit_percent
+        trade_count = trades
 
         if profit_percent > 10 and max_drawdown_percent > -30:
             recommendation = "Keep"
@@ -81,5 +117,9 @@ class BacktestTool(BaseTool):
             "profit_percent": profit_percent,
             "max_drawdown_percent": max_drawdown_percent,
             "sharpe_ratio": sharpe_ratio,
-            "recommendation": recommendation
+            "recommendation": recommendation,
+            "win_rate": win_rate,
+            "profit_factor": profit_factor,
+            "total_return": total_return,
+            "trade_count": trade_count,
         }

@@ -25,7 +25,7 @@ class FetchOHLCVTool(BaseTool):
     def _run(self, symbol: str, timeframe: str, start_date: str, end_date: Optional[str] = None) -> Dict[str, str]:
         os.makedirs("data", exist_ok=True)
         path = f"data/{symbol}_{timeframe}_enriched.csv"
-        
+
         if os.path.exists(path):
             return {"ohlcv_csv_path": path}
         
@@ -90,30 +90,30 @@ class FetchOHLCVTool(BaseTool):
     def _add_indicators(self, df: pd.DataFrame) -> pd.DataFrame:
         # Moving Averages
         for period in [10, 20, 50, 100, 200]:
-            df[f"EMA_{period}"] = df["close"].ewm(span=period).mean()
-            df[f"SMA_{period}"] = df["close"].rolling(window=period).mean()
+            df[f"ema_{period}"] = df["close"].ewm(span=period).mean()
+            df[f"sma_{period}"] = df["close"].rolling(window=period).mean()
 
         # RSI
         for period in [7, 14]:
-            df[f"RSI_{period}"] = ta.momentum.RSIIndicator(df["close"], window=period).rsi()
+            df[f"rsi_{period}"] = ta.momentum.RSIIndicator(df["close"], window=period).rsi()
 
         # MACD
         macd = ta.trend.MACD(df["close"])
-        df["MACD"] = macd.macd()
-        df["MACD_SIGNAL"] = macd.macd_signal()
-        df["MACD_HIST"] = macd.macd_diff()
+        df["macd"] = macd.macd()
+        df["macd_signal"] = macd.macd_signal()
+        df["macd_hist"] = macd.macd_diff()
 
         # Bollinger Bands
         bb = ta.volatility.BollingerBands(df["close"], window=20)
-        df["BB_UPPER"] = bb.bollinger_hband()
-        df["BB_LOWER"] = bb.bollinger_lband()
+        df["bb_upper"] = bb.bollinger_hband()
+        df["bb_lower"] = bb.bollinger_lband()
 
         # ATR
-        df["ATR_14"] = ta.volatility.AverageTrueRange(
+        df["atr_14"] = ta.volatility.AverageTrueRange(
             df["high"], df["low"], df["close"], window=14
         ).average_true_range()
 
         # VWAP
-        df["VWAP"] = (df["volume"] * (df["high"] + df["low"] + df["close"]) / 3).cumsum() / df["volume"].cumsum()
+        df["vwap"] = (df["volume"] * (df["high"] + df["low"] + df["close"]) / 3).cumsum() / df["volume"].cumsum()
 
         return df
