@@ -42,7 +42,7 @@ An AI-powered cryptocurrency trading system that combines multi-agent strategy g
 pip install uv
 
 # Clone and navigate to project
-git clone <your-repo-url>
+git clone https://github.com/pushkqr/crypto-bot
 cd crypto
 
 # Install dependencies
