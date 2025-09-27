@@ -86,6 +86,7 @@ backtest_strategy:
         - stop_loss: float
         - take_profit: float
         - allocation: float
+        - timeframe: str
     No raw strategy objects should be returned, only performance metrics and strategy.
 
   agent: backtester

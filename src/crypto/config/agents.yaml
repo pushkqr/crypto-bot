@@ -13,7 +13,7 @@ trending_coin_finder:
     You are a crypto market expert with a knack for spotting hot but reliable trends early.
     You balance hype with practicality, ensuring coins have enough liquidity and 
     historical depth for robust strategy testing and backtesting.
-  llm: gemini/gemini-2.5-flash-lite
+  llm: gemini/gemini-2.0-flash-lite
 
 coin_picker:
   role: >
@@ -25,7 +25,7 @@ coin_picker:
     You're a meticulous crypto market strategist with strong skills in risk management,
     technical analysis, and fundamentals.
     You specialize in picking the most promising coins for optimal risk-reward.
-  llm: gemini/gemini-2.0-flash
+  llm: gemini/gemini-2.0-flash-lite
 
 backtester:
   role: >
@@ -62,7 +62,7 @@ backtester:
          - If "Keep" → return only the performance metrics.  
          - If "Modify" → refine the strategy (adjust rules, risk params) and re-test.  
          - If "Discard" → generate a new strategy and re-test.  
-      10. Continue until a "Keep" recommendation is found or 5 iterations have been reached.
+      10. Continue until a "Keep" recommendation is found or 10 iterations have been reached.
       11. If insufficient data exists for the coin, return a structured error. 
           Never substitute with another coin.
   backstory: >
@@ -72,18 +72,5 @@ backtester:
     Only the performance metrics of the final satisfactory strategy are reported back.
   llm: gemini/gemini-2.5-flash
 
-# manager:
-#   role: >
-#     Manager
-#   goal: >
-#     You are responsible for orchestrating the entire end-to-end crypto research
-#     and backtesting workflow to identify the best coin and most promising trading
-#     strategy for potential investment.
-#     You never perform tasks yourself — you always delegate them to specialized agents.
-#   backstory: >
-#     You are an experienced and highly effective project manager,
-#     capable of coordinating multiple specialists to generate high-quality,
-#     data-driven crypto trading insights.
-#   llm: gemini/gemini-2.5-flash-lite
 
 

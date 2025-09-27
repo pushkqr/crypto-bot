@@ -97,14 +97,12 @@ class Crypto():
         #     ) 
         # )
 
-        # manager = Agent(config=self.agents_config["manager"],verbose=True, allow_delegation=True)
 
         return Crew(
             agents=self.agents, 
             tasks=self.tasks, 
             process=Process.sequential,
             verbose=True,
-            # manager_agent=manager,
             # long_term_memory=long_term_memory,
             # entity_memory=entity_memory
         )

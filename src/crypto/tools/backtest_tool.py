@@ -14,6 +14,7 @@ class StrategyBackTestInput(BaseModel):
     take_profit: float = Field(ge=0, le=100, description="Take-profit percentage (0-100)")
     allocation: float = Field(ge=0, le=100, description="Percentage of portfolio allocated to this strategy")
     ohlcv_csv_path: str = Field(description="Path to saved CSV of historical OHLCV data")
+    timeframe: str = Field(description="Timeframe of the strategy")
 
 class Strategy(BaseModel): 
     """Represents a trading strategy for a coin""" 
@@ -23,7 +24,8 @@ class Strategy(BaseModel):
     exit_rules: str = Field(description="Python expression that returns a Pandas boolean Series for exit signals") 
     stop_loss: float = Field(ge=0, description="Stop-loss percentage (0-100)") 
     take_profit: float = Field(ge=0, description="Take-profit percentage (0-100)") 
-    allocation: float = Field(ge=0, le=100, description="Portfolio allocation percentage") 
+    allocation: float = Field(ge=0, le=100, description="Portfolio allocation percentage")
+    timeframe: str = Field(description="Timeframe of the strategy")
 
 class StrategyPerformance(BaseModel):
     """Represents the performance of a strategy"""
@@ -48,7 +50,7 @@ class BacktestTool(BaseTool):
     )
     args_schema: Type[BaseModel] = StrategyBackTestInput
 
-    def _run(self, strategy_id: str, coin_symbol: str, entry_rules: str, exit_rules: str, stop_loss: float, take_profit: float, allocation: float, ohlcv_csv_path: str) -> Dict[str, str]: 
+    def _run(self, strategy_id: str, coin_symbol: str, entry_rules: str, exit_rules: str, stop_loss: float, take_profit: float, allocation: float, timeframe: str, ohlcv_csv_path: str) -> Dict[str, str]: 
         if not os.path.exists(ohlcv_csv_path):
             raise FileNotFoundError(f"CSV not found at {ohlcv_csv_path}")
 
@@ -152,7 +154,8 @@ class BacktestTool(BaseTool):
             exit_rules=exit_rules,
             stop_loss=stop_loss,
             take_profit=take_profit,
-            allocation=allocation
+            allocation=allocation,
+            timeframe=timeframe
         )
         
         return {

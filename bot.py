@@ -292,9 +292,6 @@ class LiveDataManager:
             return {'entry': False, 'exit': False}
 
 async def main():
-    data_manager = LiveDataManager("ETHUSDT", "1h")
-    data_manager.initialize()
-    
     try:
         with open('output/backtest_results.json', 'r') as f:
             backtest_data = json.load(f)
@@ -305,6 +302,9 @@ async def main():
     except json.JSONDecodeError:
         print("❌ Invalid strategy file format.")
         return
+    
+    data_manager = LiveDataManager(strategy.get('coin_symbol'), strategy.get('timeframe'))
+    data_manager.initialize()
     
     print(f"🚀 Trading Strategy: {strategy.get('strategy_id')}")
     
