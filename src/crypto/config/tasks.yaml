@@ -70,19 +70,27 @@ backtest_strategy:
       9. If insufficient data exists, return a structured error instead of substituting with another coin.
 
   expected_output: >
-    A structured JSON object with concise backtest performance metrics only:
-      - win_rate: % profitable trades
-      - profit_factor: gross profit ÷ gross loss
-      - sharpe_ratio: risk-adjusted return
-      - max_drawdown: maximum drawdown %
-      - total_return: % return over backtest period
-      - trade_count: number of trades executed
-
-    No raw strategy objects should be returned, only performance metrics.
+    A structured JSON object with performance metrics and strategy only:
+      - performance:
+        - win_rate: % profitable trades
+        - profit_factor: gross profit ÷ gross loss
+        - sharpe_ratio: risk-adjusted return
+        - max_drawdown: maximum drawdown %
+        - total_return: % return over backtest period
+        - trade_count: number of trades executed
+      - strategy:
+        - strategy_id: id
+        - coin_symbol: str
+        - entry_rules: str
+        - exit_rules: str
+        - stop_loss: float
+        - take_profit: float
+        - allocation: float
+    No raw strategy objects should be returned, only performance metrics and strategy.
 
   agent: backtester
   context:
     - pick_best_coin
-  output_file: output/backtest_data.json
+  output_file: output/backtest_results.json
 
 

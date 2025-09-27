@@ -6,7 +6,7 @@ from typing import List
 from crewai_tools import SerperDevTool
 from pydantic import BaseModel, Field
 from .tools.fetch_tool import FetchOHLCVTool
-from .tools.backtest_tool import BacktestTool
+from .tools.backtest_tool import BacktestTool, StrategyBackTestOutput
 from crewai.memory import LongTermMemory, EntityMemory
 from crewai.memory.storage.rag_storage import RAGStorage
 from crewai.memory.storage.ltm_sqlite_storage import LTMSQLiteStorage
@@ -21,15 +21,6 @@ class CoinList(BaseModel):
     """A list of cryptocurrencies shortlisted by the screener"""
     coins: List[Coin] = Field(description="List of trending coins")
 
-class Strategy(BaseModel): 
-    """Represents a trading strategy for a coin""" 
-    strategy_id: str = Field(description="Unique identifier for the strategy") 
-    coin_symbol: str = Field(description="Ticker symbol of the coin")
-    entry_rules: str = Field(description="Python expression that returns a Pandas boolean Series for entry signals") 
-    exit_rules: str = Field(description="Python expression that returns a Pandas boolean Series for exit signals") 
-    stop_loss: float = Field(ge=0, description="Stop-loss percentage (0-100)") 
-    take_profit: float = Field(ge=0, description="Take-profit percentage (0-100)") 
-    allocation: float = Field(ge=0, le=100, description="Portfolio allocation percentage") 
 
 @CrewBase
 class Crypto():
@@ -79,7 +70,8 @@ class Crypto():
     @task 
     def backtest_strategy(self) -> Task: 
         return Task( 
-            config=self.tasks_config['backtest_strategy'], 
+            config=self.tasks_config['backtest_strategy'],
+            output_pydantic=StrategyBackTestOutput,
         )
 
     @crew

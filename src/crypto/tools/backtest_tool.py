@@ -15,6 +15,31 @@ class StrategyBackTestInput(BaseModel):
     allocation: float = Field(ge=0, le=100, description="Percentage of portfolio allocated to this strategy")
     ohlcv_csv_path: str = Field(description="Path to saved CSV of historical OHLCV data")
 
+class Strategy(BaseModel): 
+    """Represents a trading strategy for a coin""" 
+    strategy_id: str = Field(description="Unique identifier for the strategy") 
+    coin_symbol: str = Field(description="Ticker symbol of the coin")
+    entry_rules: str = Field(description="Python expression that returns a Pandas boolean Series for entry signals") 
+    exit_rules: str = Field(description="Python expression that returns a Pandas boolean Series for exit signals") 
+    stop_loss: float = Field(ge=0, description="Stop-loss percentage (0-100)") 
+    take_profit: float = Field(ge=0, description="Take-profit percentage (0-100)") 
+    allocation: float = Field(ge=0, le=100, description="Portfolio allocation percentage") 
+
+class StrategyPerformance(BaseModel):
+    """Represents the performance of a strategy"""
+    win_rate: float = Field(description="Win rate of the strategy")
+    profit_factor: float = Field(description="Profit factor of the strategy")
+    sharpe_ratio: float = Field(description="Sharpe ratio of the strategy")
+    max_drawdown: float = Field(description="Max drawdown of the strategy")
+    total_return: float = Field(description="Total return of the strategy")
+    trade_count: int = Field(description="Trade count of the strategy")
+
+class StrategyBackTestOutput(BaseModel):
+    """Represents the output of a backtest strategy"""
+    performance: StrategyPerformance = Field(description="Performance of the strategy")
+    strategy: Strategy = Field(description="Strategy used for the backtest")
+    recommendation: str = Field(description="Recommendation for the strategy")
+
 
 class BacktestTool(BaseTool):
     name: str = "Dynamic Backtest Tool"
@@ -111,15 +136,28 @@ class BacktestTool(BaseTool):
         else:
             recommendation = "Modify"
 
+        performance = StrategyPerformance(
+            win_rate=win_rate,
+            profit_factor=profit_factor,
+            sharpe_ratio=sharpe_ratio,
+            max_drawdown=max_drawdown_percent,
+            total_return=total_return,
+            trade_count=trade_count
+        )
+
+        strategy = Strategy(
+            strategy_id=strategy_id,
+            coin_symbol=coin_symbol,
+            entry_rules=entry_rules,
+            exit_rules=exit_rules,
+            stop_loss=stop_loss,
+            take_profit=take_profit,
+            allocation=allocation
+        )
+        
         return {
-            "strategy_id": strategy_id,
-            "coin_symbol": coin_symbol,
-            "profit_percent": profit_percent,
-            "max_drawdown_percent": max_drawdown_percent,
-            "sharpe_ratio": sharpe_ratio,
-            "recommendation": recommendation,
-            "win_rate": win_rate,
-            "profit_factor": profit_factor,
-            "total_return": total_return,
-            "trade_count": trade_count,
+            "performance": performance.dict(),
+            "strategy": strategy.dict(),
+            "recommendation": recommendation
         }
+
