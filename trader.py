@@ -64,6 +64,12 @@ class CryptoTrader:
             self.add_log("info", f"Portfolio initialized: ${self.portfolio_value:.2f}")
         except Exception as e:
             self.add_log("error", f"Failed to initialize portfolio: {e}")
+        
+        self.add_log("info", "CryptoTrader initialized")
+        if self.strategy:
+            self.add_log("info", f"Monitoring {self.symbol} on {self.timeframe} timeframe")
+        else:
+            self.add_log("error", "No strategy loaded - please run 'uv run run_crew' first")
 
     def _get_server_time(self):
         try:
@@ -108,12 +114,6 @@ class CryptoTrader:
                     
         except Exception as e:
             self.add_log("error", f"Failed to update portfolio: {e}")
-        
-        self.add_log("info", "CryptoTrader initialized")
-        if self.strategy:
-            self.add_log("info", f"Monitoring {self.symbol} on {self.timeframe} timeframe")
-        else:
-            self.add_log("error", "No strategy loaded - please run 'uv run run_crew' first")
 
     def load_strategy(self):
         try:
