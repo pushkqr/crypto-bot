@@ -76,7 +76,7 @@ BINANCE_API_SECRET=your_mainnet_secret
 TESTNET_API_KEY=your_testnet_key
 TESTNET_SECRET=your_testnet_secret
 
-# Push Notifications (optional)
+# Push Notifications
 PUSHOVER_TOKEN=your_pushover_token
 PUSHOVER_USER=your_pushover_user
 
