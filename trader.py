@@ -607,8 +607,6 @@ class CryptoTrader:
         print(f"\n🔍 SIGNAL DEBUG:")
         print(f"   Open: {latest['open']:.2f}")
         print(f"   Close: {latest['close']:.2f}")
-        print(f"   Entry Rule (open < close): {latest['open'] < latest['close']}")
-        print(f"   Exit Rule (open > close): {latest['open'] > latest['close']}")
         print(f"   Current Position: {self.position:.6f}")
         print(f"   Entry Signal: {signals['entry']}")
         print(f"   Exit Signal: {signals['exit']}")
@@ -837,7 +835,8 @@ class CryptoTrader:
                 print("❌ Unable to get current price")
                 return None
             
-            usdt_to_spend = self.usdt_balance * allocation
+            
+            usdt_to_spend = self.usdt_balance * allocation * 0.999
             quantity = usdt_to_spend / current_price
             try:
                 exchange_info = self.trading_client.get_exchange_info()

@@ -152,4 +152,9 @@ def create_crypto_ui():
 
 if __name__ == "__main__":
     ui = create_crypto_ui()
-    ui.launch(inbrowser=True, server_name="0.0.0.0", server_port=7860)
+    ui.launch(
+        inbrowser=False, 
+        server_name="0.0.0.0", 
+        server_port=7860,
+        prevent_thread_lock=False
+    )

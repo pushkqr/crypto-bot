@@ -75,11 +75,12 @@ def run_gui():
         
         ui = create_crypto_ui()
         ui.launch(
-            inbrowser=True, 
+            inbrowser=False, 
             server_name="0.0.0.0", 
             server_port=7860,
             share=False,
-            show_error=True
+            show_error=True,
+            prevent_thread_lock=False
         )
     except KeyboardInterrupt:
         print("\n" + "=" * 62)
