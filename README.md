@@ -14,6 +14,7 @@ An AI-powered cryptocurrency trading system that combines multi-agent strategy g
 - **Strategy Execution** – Executes trades based on generated strategies with position tracking
 - **Risk Management** – Built-in stop-loss, take-profit, and allocation controls
 - **Testnet Integration** – Safe testing environment with Binance testnet
+- **Professional Dashboard** – Real-time monitoring interface with live charts and analytics
 
 ### **Advanced Capabilities**
 - **Generic Strategy Support** – Works with any strategy without code changes
@@ -87,11 +88,23 @@ This will:
 ### **Option 2: Manual Workflow**
 ```bash
 # Generate new strategy
-crewai run_crew
+uv run run_crew
 
 # Execute trading bot
 uv run bot.py
 ```
+
+### **Option 3: GUI Dashboard**
+```bash
+# Launch the professional trading dashboard
+python run_gui.py
+```
+This opens a real-time web interface with:
+- Live price charts
+- Portfolio monitoring
+- Strategy performance metrics
+- Trading activity logs
+- Real-time updates every 30 seconds
 
 
 ## 📁 Project Structure
@@ -104,7 +117,10 @@ crypto/
 │   ├── config/                # Agent and task configs
 │   └── tools/                 # Custom tools
 ├── app.py                     # Main pipeline script
-├── bot.py                     # Live trading bot
+├── run_gui.py                 # GUI dashboard launcher
+├── crypto_gui.py              # Gradio web interface
+├── crypto_trader.py           # Complete trading system (merged bot + UI logic)
+├── crypto_util.py             # UI utilities and styling
 ├── output/                    # Generated strategies & results
 └── data/                      # Historical data cache
 ```
@@ -157,3 +173,5 @@ Contributions are welcome!
 - **pandas** – Data manipulation
 - **numpy** – Numerical computing
 - **pydantic** – Data validation
+- **gradio** – Web interface framework
+- **plotly** – Interactive charts and visualizations

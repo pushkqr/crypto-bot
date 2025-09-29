@@ -53,12 +53,11 @@ backtest_strategy:
 
     Steps:
       1. Normalize trading pair symbol to USDT format.
-      2. Determine timeframe and start date if missing, based on defaults:
-         * 15m → last 90 days (~8,600 candles)
-         * 1h  → last 180 days (~4,300 candles)
-         * 4h  → last 365 days (~2,200 candles)
-         * 1d  → last 730 days (~730 candles)
-      3. Always use today's date as the end date if missing.
+      2.Timeframe: {timeframe}. Determine start date if missing, based on defaults:
+         * <=1h  → last 180 days  (~4,300 candles)
+         * <=4h  → last 365 days  (~2,200 candles)
+         * <=1d  → last 730 days  (~730 candles)
+      3. Always use today's date {date} as the end date.
       4. Fetch enriched OHLCV data with all required indicators.
       5. Append 'ohlcv_csv_path' internally to the strategy object.
       6. Run the backtest.
@@ -66,7 +65,7 @@ backtest_strategy:
          - If "Keep" → return only concise structured performance metrics.
          - If "Modify" → refine the strategy and re-test.
          - If "Discard" → create a new strategy and re-test.
-      8. Continue until a "Keep" recommendation is found or 5 iterations max.
+      8. Continue until a "Keep" recommendation is found.
       9. If insufficient data exists, return a structured error instead of substituting with another coin.
 
   expected_output: >

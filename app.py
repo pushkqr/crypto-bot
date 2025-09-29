@@ -3,7 +3,8 @@ import json
 import sys
 import subprocess
 from pathlib import Path
-from bot import main as run_trading_main
+from gui import create_crypto_ui
+from trader import CryptoTrader
 import asyncio
 
 DEBUG = os.getenv("DEBUG", "False").lower() == "true"
@@ -37,7 +38,7 @@ def run_crewai_workflow():
     
     try:
         result = subprocess.run(
-            ["uv", "run", "run_crew"], 
+            ["crewai", "run"], 
             capture_output=not DEBUG,
             text=True,
             timeout=300
@@ -57,24 +58,51 @@ def run_crewai_workflow():
         print(f"❌ Error running CrewAI workflow: {e}")
         return False
 
-def run_trading_bot():
-    """Run the trading bot"""
-    print("\n🤖 Starting trading bot...")
-    print("=" * 60)
-    
+def run_gui():
+    """Launch the crypto trading bot GUI"""
     try:
-        asyncio.run(run_trading_main())
+        
+        print("🚀" + "=" * 60)
+        print("🚀 CRYPTO TRADING BOT DASHBOARD")
+        print("🚀" + "=" * 60)
+        print("=" * 62)
+        print("🌐 Dashboard URL: http://localhost:7860")
+        print("🔄 Auto-refresh: Every 30 seconds")
+        print("📱 Responsive design for all devices")
+        print("=" * 62)
+        print("🛑 Press Ctrl+C to stop the dashboard")
+        print("=" * 62)
+        
+        ui = create_crypto_ui()
+        ui.launch(
+            inbrowser=True, 
+            server_name="0.0.0.0", 
+            server_port=7860,
+            share=False,
+            show_error=True
+        )
     except KeyboardInterrupt:
-        print("\n🛑 Trading bot stopped by user")
+        print("\n" + "=" * 62)
+        print("🛑 Dashboard stopped by user")
+        print("👋 Thank you for using Crypto Trading Bot!")
+        print("=" * 62)
     except Exception as e:
-        print(f"❌ Error running trading bot: {e}")
+        print(f"\n❌ Error starting dashboard: {e}")
+        print("\n🔧 Troubleshooting Checklist:")
+        print("   ✅ Dependencies installed: uv sync")
+        print("   ✅ Environment configured: .env file with API keys")
+        print("   ✅ Strategy generated: uv run run_crew")
+        print("   ✅ Python version: 3.10+")
+        print("\n📚 For help, check: GUI_README.md")
+        sys.exit(1)
+
 
 def main():
     """Main pipeline function"""
     print("🚀 Crypto Trading Bot")
     print("=" * 40)
     
-    if not Path("bot.py").exists():
+    if not Path("trader.py").exists():
         print("❌ Please run this from the crypto project directory")
         sys.exit(1)
     
@@ -98,22 +126,22 @@ def main():
             choice = input(f"\n🤔 Do you want to execute '{strategy_name}'? (y/n): ").strip().lower()
             
             if choice in ['y', 'yes']:
-                run_trading_bot()
+                run_gui()
                 break
             elif choice in ['n', 'no']:
                 print("\n🔄 Generating new strategy...")
                 if run_crewai_workflow():
                     print("\n✅ New strategy generated!")
-                    run_trading_bot()
+                    run_gui()
                 break
             else:
-                print("❌ Please enter 'y' or 'n'")
+                print("❌ Please enter 'y', 'n'")
     
     else:
         print("\n📋 No strategy found - generating new one...")
         if run_crewai_workflow():
             print("\n✅ Strategy generated successfully!")
-            run_trading_bot()
+            run_gui()
         else:
             print("❌ Failed to generate strategy. Exiting.")
             sys.exit(1)
