@@ -39,7 +39,7 @@ def run_crewai_workflow():
     try:
         result = subprocess.run(
             ["crewai", "run"], 
-            capture_output=not DEBUG,
+            capture_output=False,
             text=True,
             timeout=300
         )
