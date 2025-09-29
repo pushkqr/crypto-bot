@@ -12,6 +12,7 @@ import time
 import numpy as np
 import ta
 import asyncio
+import requests
 
 load_dotenv(override=True)
 
@@ -902,6 +903,10 @@ class CryptoTrader:
             
             self._force_portfolio_update()
             self.add_log("portfolio", f"Portfolio updated after buy: {self.portfolio_value:.2f} USDT")
+            
+            notification_msg = f"🟢 BUY ORDER EXECUTED!\n{self.symbol.replace('USDT', '')}: {quantity:.6f} @ ${current_price:.2f}\nValue: ${quantity * current_price:.2f} USDT"
+            self.push_notification(notification_msg)
+            
             return order
         except Exception as e:
             self.add_log("error", f"❌ BUY ORDER FAILED: {e}")
@@ -988,6 +993,11 @@ class CryptoTrader:
             
             self._force_portfolio_update()
             self.add_log("portfolio", f"Portfolio updated after sell: {self.portfolio_value:.2f} USDT")
+            
+            pnl_text = f"P&L: {pnl_percent:+.2f}% (${pnl_value:+.2f})" if pnl_percent != 0 else "P&L: N/A"
+            notification_msg = f"🔴 SELL ORDER EXECUTED!\n{self.symbol.replace('USDT', '')}: {quantity:.6f} @ ${current_price:.2f}\nValue: ${quantity * current_price:.2f} USDT\n{pnl_text}"
+            self.push_notification(notification_msg)
+            
             return order
         except Exception as e:
             self.add_log("error", f"❌ SELL ORDER FAILED: {e}")
@@ -1017,3 +1027,23 @@ class CryptoTrader:
         except Exception as e:
             print(f"Error evaluating strategy rules: {e}")
             return {'entry': False, 'exit': False}
+
+    def push_notification(self, message):
+        """Send a push notification via Pushover"""
+        try:
+            pushover_token = os.getenv("PUSHOVER_TOKEN")
+            pushover_user = os.getenv("PUSHOVER_USER")
+            pushover_url = "https://api.pushover.net/1/messages.json"
+            
+            if pushover_token and pushover_user:
+                requests.post(pushover_url, data={
+                    "token": pushover_token, 
+                    "user": pushover_user, 
+                    "message": message
+                })
+                print(f"📱 Push notification sent: {message}")
+            else:
+                print(f"⚠️ Push notification not configured: {message}")
+        except Exception as e:
+            print(f"❌ Failed to send push notification: {e}")
+            
