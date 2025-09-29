@@ -4,17 +4,24 @@ An AI-powered cryptocurrency trading system that combines multi-agent strategy g
 
 ## 🚀 Features
 
-### **Multi-Agent Strategy Generation**
+### **AI-Powered Strategy Generation**
 - **Trending Coin Finder** – Identifies promising cryptocurrencies from news, market reports, and social sentiment
-- **Strategy Ideator** – Generates actionable trading strategies using technical indicators (EMA, SMA, RSI, MACD, Bollinger Bands, ATR, VWAP)
-- **Backtester** – Simulates strategy performance using historical OHLCV data with comprehensive metrics
+- **Coin Picker** – Selects the best investment opportunity with detailed analysis
+- **Strategy Generator & Backtester** – Creates and validates trading strategies using technical indicators (EMA, SMA, RSI, MACD, Bollinger Bands, ATR, VWAP)
 
 ### **Live Trading System**
 - **Real-time Data Management** – Maintains rolling window of historical data with automatic updates
-- **Strategy Execution** – Executes trades based on generated strategies with position tracking
+- **Automated Strategy Execution** – Executes trades based on generated strategies with position tracking
 - **Risk Management** – Built-in stop-loss, take-profit, and allocation controls
 - **Testnet Integration** – Safe testing environment with Binance testnet
 - **Professional Dashboard** – Real-time monitoring interface with live charts and analytics
+
+### **Professional Web Interface**
+- **Interactive Charts** – Live price charts with technical indicators and trading signals
+- **Portfolio Monitoring** – Real-time holdings, transactions, and P&L tracking
+- **Activity Logs** – Comprehensive trading activity and system logs
+- **Responsive Design** – Modern UI with Merriweather Sans typography
+- **Auto-refresh** – Updates every 30 seconds for real-time data
 
 ### **Advanced Capabilities**
 - **Generic Strategy Support** – Works with any strategy without code changes
@@ -69,13 +76,9 @@ BINANCE_API_SECRET=your_mainnet_secret
 TESTNET_API_KEY=your_testnet_key
 TESTNET_SECRET=your_testnet_secret
 
-# Debug mode (optional)
-DEBUG=False
-```
 
 ## 🚀 Quick Start
 
-### **Option 1: Automated Pipeline (Recommended)**
 ```bash
 uv run app.py
 ```
@@ -83,26 +86,13 @@ This will:
 1. Check for existing strategies
 2. Ask if you want to execute them
 3. Generate new strategies if needed
-4. Start live trading
+4. Launch the professional trading dashboard
 
-### **Option 2: Manual Workflow**
-```bash
-# Generate new strategy
-uv run run_crew
 
-# Execute trading bot
-uv run bot.py
-```
-
-### **Option 3: GUI Dashboard**
-```bash
-# Launch the professional trading dashboard
-python run_gui.py
-```
 This opens a real-time web interface with:
-- Live price charts
-- Portfolio monitoring
-- Strategy performance metrics
+- Live price charts with technical indicators
+- Portfolio monitoring and P&L tracking
+- Current holdings and recent transactions
 - Trading activity logs
 - Real-time updates every 30 seconds
 
@@ -117,10 +107,9 @@ crypto/
 │   ├── config/                # Agent and task configs
 │   └── tools/                 # Custom tools
 ├── app.py                     # Main pipeline script
-├── run_gui.py                 # GUI dashboard launcher
-├── crypto_gui.py              # Gradio web interface
-├── crypto_trader.py           # Complete trading system (merged bot + UI logic)
-├── crypto_util.py             # UI utilities and styling
+├── gui.py                     # Gradio web interface
+├── trader.py                  # Complete trading system
+├── util.py                    # UI utilities and styling
 ├── output/                    # Generated strategies & results
 └── data/                      # Historical data cache
 ```
@@ -135,7 +124,7 @@ crypto/
 - Define workflow tasks and dependencies
 - Set output formats and validation rules
 
-### **Trading Parameters** (`bot.py`)
+### **Trading Parameters** (`trader.py`)
 - Symbol and timeframe settings
 - Risk management parameters
 - Data buffer size configuration
@@ -146,9 +135,6 @@ crypto/
 - Binance (Testnet for safe testing)
 - Mainnet data fetching for accurate indicators
 
-### **Supported Timeframes**
-- 1m, 5m, 15m, 30m, 1h, 4h, 1d
-- Configurable in `LiveDataManager`
 
 ### **Risk Management**
 - Position sizing based on portfolio allocation
@@ -167,11 +153,13 @@ Contributions are welcome!
 
 ## 📚 Dependencies
 
-- **CrewAI** – Multi-agent framework
-- **python-binance** – Binance API integration
-- **ta** – Technical analysis indicators
-- **pandas** – Data manipulation
+- **CrewAI** – Multi-agent framework for strategy generation
+- **python-binance** – Binance API integration for live trading
+- **ta** – Technical analysis indicators (EMA, SMA, RSI, MACD, etc.)
+- **pandas** – Data manipulation and analysis
 - **numpy** – Numerical computing
-- **pydantic** – Data validation
-- **gradio** – Web interface framework
+- **pydantic** – Data validation and serialization
+- **gradio** – Web interface framework for dashboard
 - **plotly** – Interactive charts and visualizations
+- **python-dotenv** – Environment variable management
+- **requests** – HTTP requests for API calls
