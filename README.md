@@ -57,7 +57,7 @@ cd crypto
 uv sync
 source .venv/bin/activate  # Linux/WSL
 # or
-.venv\Scripts\Activate.ps1  # Windows PowerShell
+& .venv\Scripts\Activate.ps1  # Windows PowerShell
 ```
 
 ### Environment Variables
