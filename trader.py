@@ -835,8 +835,8 @@ class CryptoTrader:
                 print("❌ Unable to get current price")
                 return None
             
-            
-            usdt_to_spend = self.usdt_balance * allocation * 0.999
+
+            usdt_to_spend = self.usdt_balance * allocation * 0.99
             quantity = usdt_to_spend / current_price
             try:
                 exchange_info = self.trading_client.get_exchange_info()
@@ -964,13 +964,19 @@ class CryptoTrader:
             self.add_log("trade", f"Price: {current_price:.2f} USDT")
             self.add_log("trade", f"Value: {quantity * current_price:.2f} USDT")
             
-            pnl_percent = 0
-            pnl_value = 0
+            position_pnl_percent = 0
+            position_pnl_value = 0
             if self.entry_price > 0:
                 pnl_percent = ((current_price - self.entry_price) / self.entry_price) * 100
                 pnl_value = (current_price - self.entry_price) * quantity
                 print(f"   P&L: {pnl_percent:+.2f}% ({pnl_value:+.2f} USDT)")
                 self.add_log("trade", f"P&L: {pnl_percent:+.2f}% ({pnl_value:+.2f} USDT)")
+            
+            total_pnl_percent = 0
+            total_pnl_value = 0
+            if self.initial_portfolio_value > 0:
+                total_pnl_percent = ((self.portfolio_value - self.initial_portfolio_value) / self.initial_portfolio_value) * 100
+                total_pnl_value = self.portfolio_value - self.initial_portfolio_value
             
             transaction = {
                 "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
@@ -980,8 +986,8 @@ class CryptoTrader:
                 "type": "SELL",
                 "value": f"{quantity * current_price:.2f}",
                 "order_id": order['orderId'],
-                "pnl": f"{pnl_percent:+.2f}%",
-                "pnl_value": f"{pnl_value:+.2f}"
+                "pnl": f"{position_pnl_percent:+.2f}%",
+                "pnl_value": f"{position_pnl_value:+.2f}"
             }
             self.transactions.append(transaction)
             if len(self.transactions) > 20:
@@ -993,8 +999,9 @@ class CryptoTrader:
             self._force_portfolio_update()
             self.add_log("portfolio", f"Portfolio updated after sell: {self.portfolio_value:.2f} USDT")
             
-            pnl_text = f"P&L: {pnl_percent:+.2f}% (${pnl_value:+.2f})" if pnl_percent != 0 else "P&L: N/A"
-            notification_msg = f"🔴 SELL ORDER EXECUTED!\n{self.symbol.replace('USDT', '')}: {quantity:.6f} @ ${current_price:.2f}\nValue: ${quantity * current_price:.2f} USDT\n{pnl_text}"
+            position_pnl_text = f"P&L: {position_pnl_percent:+.2f}% (${position_pnl_value:+.2f})" if position_pnl_percent != 0 else "P&L: N/A"
+            total_pnl_text = f"Total P&L: {total_pnl_percent:+.2f}% (${total_pnl_value:+.2f})" if total_pnl_percent != 0 else "Total P&L: N/A"
+            notification_msg = f"🔴 SELL ORDER EXECUTED!\n{self.symbol.replace('USDT', '')}: {quantity:.6f} @ ${current_price:.2f}\nValue: ${quantity * current_price:.2f} USDT\nPosition P&L: {position_pnl_text}\nTotal P&L: {total_pnl_text}"
             self.push_notification(notification_msg)
             
             return order

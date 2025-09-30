@@ -75,7 +75,7 @@ def run_gui():
         
         ui = create_crypto_ui()
         ui.launch(
-            inbrowser=False, 
+            inbrowser=True, 
             server_name="0.0.0.0", 
             server_port=7860,
             share=False,
@@ -94,7 +94,7 @@ def run_gui():
         print("   ✅ Environment configured: .env file with API keys")
         print("   ✅ Strategy generated: uv run run_crew")
         print("   ✅ Python version: 3.10+")
-        print("\n📚 For help, check: GUI_README.md")
+        print("\n📚 For help, check: README.md")
         sys.exit(1)
 
 
