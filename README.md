@@ -43,6 +43,7 @@ An AI-powered cryptocurrency trading system that combines multi-agent strategy g
 ### Prerequisites
 - Python >= 3.10 < 3.14
 - [UV](https://docs.astral.sh/uv/) package manager
+- **NTP Time Synchronization** – System clock must be synchronized for accurate API timestamps
 
 ### Setup
 ```bash
@@ -58,6 +59,10 @@ uv sync
 source .venv/bin/activate  # Linux/WSL
 # or
 .venv\Scripts\Activate.ps1  # Windows PowerShell
+
+# Enable NTP time synchronization
+sudo timedatectl set-ntp true  # Linux/WSL
+# For Windows: Settings → Time & Language → Date & Time → Set time automatically
 ```
 
 ### Environment Variables
@@ -76,10 +81,20 @@ BINANCE_API_SECRET=your_mainnet_secret
 TESTNET_API_KEY=your_testnet_key
 TESTNET_SECRET=your_testnet_secret
 
-# Push Notifications
-PUSHOVER_TOKEN=your_pushover_token
-PUSHOVER_USER=your_pushover_user
+# Push Notifications (ntfy)
+NTFY_SERVER=https://ntfy.sh
+NTFY_TOPIC=crypto-bot-alerts-your-unique-id
+```
 
+### Push Notifications Setup (ntfy)
+
+1. **Choose a unique topic name** (e.g., `crypto-bot-alerts-your-unique-id-12345`)
+2. **Install ntfy app** on your phone from App Store/Play Store
+3. **Subscribe to your topic** in the ntfy app
+4. **Test notifications**:
+   ```bash
+   curl -d "Test message!" https://ntfy.sh/your-topic-name
+   ```
 
 ## 🚀 Quick Start
 
@@ -150,6 +165,35 @@ crypto/
 - `output/backtest_results.json` – Strategy performance and rules
 - `output/investment_decision.md` – Detailed strategy analysis
 - `data/` – Cached historical data for faster access
+
+## 🔧 Troubleshooting
+
+### Time Synchronization Issues
+
+If you encounter "Timestamp for this request is outside of the recvWindow" errors:
+
+**Linux/WSL:**
+```bash
+# Check time sync status
+timedatectl
+
+# Enable NTP sync
+sudo timedatectl set-ntp true
+
+# Force immediate sync
+sudo ntpdate -s time.google.com
+```
+
+**Windows:**
+1. Open Settings → Time & Language → Date & Time
+2. Enable "Set time automatically"
+3. Click "Sync now"
+
+**Verify sync:**
+```bash
+# Check time drift with Binance servers
+python test.py  # If you have the time drift test script
+```
 
 ## 🤝 Contributing
 

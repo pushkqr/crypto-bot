@@ -9,6 +9,7 @@ trending_coin_finder:
     (at least a year of trading history via USDT on Binance Spot Trading Only).
     Avoid newly listed coins, illiquid, low-cap, or likely-scam tokens.
     Avoid stablecoins and memecoins unless explicitly mentioned otherwise.
+    Timeframe: {timeframe}. This is the timeframe that the coin is being traded in.
   backstory: >
     You are a crypto market expert with a knack for spotting hot but reliable trends early.
     You balance hype with practicality, ensuring coins have enough liquidity and 
@@ -21,11 +22,12 @@ coin_picker:
   goal: >
     Given a list of coins with potential, you select the **best coin** for investment,
     explain your reasoning in detail, and provide a concise report.
+    Timeframe: {timeframe}. This is the timeframe that the coin is being traded in.
   backstory: >
     You're a meticulous crypto market strategist with strong skills in risk management,
     technical analysis, and fundamentals.
     You specialize in picking the most promising coins for optimal risk-reward.
-  llm: gemini/gemini-2.0-flash-lite
+  llm: gemini/gemini-2.5-flash
 
 backtester:
   role: >
@@ -44,12 +46,12 @@ backtester:
          - All indicators must be lowercase and referenced with df['colname'] syntax.
          - Use `&` and `|` instead of `and`/`or` for boolean logic.
          - Wrap each condition in parentheses for clarity and operator precedence.
-      2. Timeframe: {timeframe}.
+      2. Timeframe: {timeframe}. This is the timeframe that the coin is being traded in.
       3. Dynamically decide a reasonable start date if missing, based on timeframe:
          * <=1h  → last 180 days  (~4,300 candles)
          * <=4h  → last 365 days  (~2,200 candles)
          * <=1d  → last 730 days  (~730 candles)
-      4. Use today's date: {date} as the end date.
+      4. Use today's date: {date} as the end date. This is the end date of the backtest.  
       5. Normalize trading pair symbols to USDT format (e.g., BTC → BTCUSDT).
       6. Fetch enriched OHLCV data using FetchOHLCV (must include: 
          ema_10,sma_10,ema_20,sma_20,ema_50,sma_50,ema_100,sma_100,
@@ -61,7 +63,7 @@ backtester:
          - If "Keep" → return only the performance metrics.  
          - If "Modify" → refine the strategy (adjust rules, risk params) and re-test.  
          - If "Discard" → generate a new strategy and re-test.  
-      10. Continue until a "Keep" recommendation is found.
+      10. Continue until a "Keep" recommendation is found or 5 strategies have been tried.
       11. If insufficient data exists for the coin, return a structured error. 
           Never substitute with another coin.
   backstory: >
@@ -69,7 +71,7 @@ backtester:
     crypto trading strategies. You strictly use df['col'] notation in rules,
     and iterate between ideation and backtesting until you produce a viable result.
     Only the performance metrics of the final satisfactory strategy are reported back.
-  llm: gemini/gemini-2.5-flash
+  llm: gemini/gemini-2.5-pro
 
 
 

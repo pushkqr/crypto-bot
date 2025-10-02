@@ -6,6 +6,8 @@ from pathlib import Path
 from gui import create_crypto_ui
 from trader import CryptoTrader
 import asyncio
+import threading
+import time
 
 DEBUG = os.getenv("DEBUG", "False").lower() == "true"
 
@@ -40,8 +42,7 @@ def run_crewai_workflow():
         result = subprocess.run(
             ["crewai", "run"], 
             capture_output=False,
-            text=True,
-            timeout=300
+            text=True
         )
         if result.returncode == 0:
             print("✅ CrewAI workflow completed successfully")
@@ -61,7 +62,6 @@ def run_crewai_workflow():
 def run_gui():
     """Launch the crypto trading bot GUI"""
     try:
-        
         print("🚀" + "=" * 60)
         print("🚀 CRYPTO TRADING BOT DASHBOARD")
         print("🚀" + "=" * 60)
@@ -74,27 +74,34 @@ def run_gui():
         print("=" * 62)
         
         ui = create_crypto_ui()
-        ui.launch(
-            inbrowser=True, 
-            server_name="0.0.0.0", 
-            server_port=7860,
-            share=False,
-            show_error=True,
-            prevent_thread_lock=False
-        )
-    except KeyboardInterrupt:
-        print("\n" + "=" * 62)
-        print("🛑 Dashboard stopped by user")
-        print("👋 Thank you for using Crypto Trading Bot!")
-        print("=" * 62)
+        
+        # Run in background thread
+        def launch_gradio():
+            ui.launch(
+                inbrowser=False,  
+                server_name="0.0.0.0", 
+                server_port=7860,
+                share=False,
+                show_error=True,
+                prevent_thread_lock=True,
+                quiet=False
+            )
+        
+        gradio_thread = threading.Thread(target=launch_gradio, daemon=True)
+        gradio_thread.start()
+        
+        print("✅ Dashboard started in background")
+        print("🌐 Access at: http://localhost:7860")
+        
+       
+        try:
+            while True:
+                time.sleep(1)
+        except KeyboardInterrupt:
+            print("\n🛑 Shutting down...")
+            
     except Exception as e:
         print(f"\n❌ Error starting dashboard: {e}")
-        print("\n🔧 Troubleshooting Checklist:")
-        print("   ✅ Dependencies installed: uv sync")
-        print("   ✅ Environment configured: .env file with API keys")
-        print("   ✅ Strategy generated: uv run run_crew")
-        print("   ✅ Python version: 3.10+")
-        print("\n📚 For help, check: README.md")
         sys.exit(1)
 
 
@@ -108,36 +115,38 @@ def main():
         sys.exit(1)
     
     data = load_strategy()
-    strategy = data.get('strategy', {})
-    performance = data.get('performance', {})
     
-    if strategy:
-        strategy_name = strategy.get('strategy_id', 'Unknown')
-        coin_symbol = strategy.get('coin_symbol', 'Unknown')
-        win_rate = performance.get('win_rate', 0)
-        total_return = performance.get('total_return', 0)
+    if data:
+        strategy = data.get('strategy', {})
+        performance = data.get('performance', {})
         
-        print(f"\n📋 Found existing strategy:")
-        print(f"   Name: {strategy_name}")
-        print(f"   Symbol: {coin_symbol}")
-        print(f"   Win Rate: {win_rate:.1f}%")
-        print(f"   Total Return: {total_return:.1f}%")
-        
-        while True:
-            choice = input(f"\n🤔 Do you want to execute '{strategy_name}'? (y/n): ").strip().lower()
+        if strategy:
+            strategy_name = strategy.get('strategy_id', 'Unknown')
+            coin_symbol = strategy.get('coin_symbol', 'Unknown')
+            win_rate = performance.get('win_rate', 0)
+            total_return = performance.get('total_return', 0)
             
-            if choice in ['y', 'yes']:
-                run_gui()
-                break
-            elif choice in ['n', 'no']:
-                print("\n🔄 Generating new strategy...")
-                if run_crewai_workflow():
-                    print("\n✅ New strategy generated!")
+            print(f"\n📋 Found existing strategy:")
+            print(f"   Name: {strategy_name}")
+            print(f"   Symbol: {coin_symbol}")
+            print(f"   Win Rate: {win_rate:.1f}%")
+            print(f"   Total Return: {total_return:.1f}%")
+            
+            while True:
+                choice = input(f"\n🤔 Do you want to execute '{strategy_name}'? (y/n): ").strip().lower()
+                
+                if choice in ['y', 'yes']:
                     run_gui()
-                break
-            else:
-                print("❌ Please enter 'y', 'n'")
-    
+                    break
+                elif choice in ['n', 'no']:
+                    print("\n🔄 Generating new strategy...")
+                    if run_crewai_workflow():
+                        print("\n✅ New strategy generated!")
+                        run_gui()
+                    break
+                else:
+                    print("❌ Please enter 'y', 'n'")
+        
     else:
         print("\n📋 No strategy found - generating new one...")
         if run_crewai_workflow():

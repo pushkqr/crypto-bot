@@ -6,6 +6,7 @@ find_trending_coins:
     Prefer established, liquid coins with sufficient trading history (at least several months).
     Avoid newly listed coins with limited data, as well as illiquid, low-cap, or likely-scam tokens.
     Exclude stablecoins and memecoins unless explicitly mentioned otherwise.
+    Timeframe: {timeframe}.
   expected_output: >
     A list of 2-3 trending cryptocurrency coins that are tradeable on Binance in USDT pairs,
     have sufficient historical price data, and are suitable for backtesting.
@@ -15,8 +16,8 @@ find_trending_coins:
 pick_best_coin:
   description: >
     Analyze the research findings and select the **best coin** for potential investment.
-    Send a push notification to the user with the chosen coin and a 1-sentence rationale.
-    Then provide a detailed report explaining:
+    Timeframe: {timeframe}. This is the timeframe that the coin is being traded in.
+    Provide a detailed report explaining:
       - why this coin was selected,
       - the expected short-term and long-term outlook,
       - and why the other shortlisted coins were not chosen.
@@ -31,7 +32,7 @@ pick_best_coin:
 backtest_strategy:
   description: >
     Generate and backtest a trading strategy for a given coin using enriched OHLCV data.
-
+    Timeframe: {timeframe}. This is the timeframe that the coin is being traded in.
     Strategy schema (internal use only):
       - strategy_id: str = Unique identifier
       - coin_symbol: str = Ticker symbol, must end with USDT
@@ -53,7 +54,7 @@ backtest_strategy:
 
     Steps:
       1. Normalize trading pair symbol to USDT format.
-      2.Timeframe: {timeframe}. Determine start date if missing, based on defaults:
+      2. Determine start date if missing, based on defaults:
          * <=1h  → last 180 days  (~4,300 candles)
          * <=4h  → last 365 days  (~2,200 candles)
          * <=1d  → last 730 days  (~730 candles)
@@ -64,8 +65,8 @@ backtest_strategy:
       7. Based on results:
          - If "Keep" → return only concise structured performance metrics.
          - If "Modify" → refine the strategy and re-test.
-         - If "Discard" → create a new strategy and re-test.
-      8. Continue until a "Keep" recommendation is found.
+         - If "Discard" → create a new strategy and re-test.  
+      8. Continue until a "Keep" recommendation is found or 5 strategies have been tried.
       9. If insufficient data exists, return a structured error instead of substituting with another coin.
 
   expected_output: >

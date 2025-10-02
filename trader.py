@@ -52,6 +52,7 @@ class CryptoTrader:
         self.usdt_balance = 0
         self.last_account_update = 0
         self.transactions = []
+        self.position_initialized = False
         
         if self.strategy:
             try:
@@ -75,17 +76,33 @@ class CryptoTrader:
     def _get_server_time(self):
         try:
             res = self.trading_client.get_server_time()
-            return res['serverTime']
+            server_time = res['serverTime']
+            local_time = int(time.time() * 1000)
+            time_diff = local_time - server_time
+            print(f"🕐 Server time: {server_time} | Local time: {local_time} | Difference: {time_diff}ms")
+            return server_time
         except Exception as e:
             try:
                 res = self.data_client.get_server_time()
-                return res['serverTime']
+                server_time = res['serverTime']
+                local_time = int(time.time() * 1000)
+                time_diff = local_time - server_time
+                print(f"🕐 Server time (data client): {server_time} | Local time: {local_time} | Difference: {time_diff}ms")
+                return server_time
             except Exception as e2:
                 self.add_log("error", f"Failed to get server time: {e2}")
-                return int(time.time() * 1000)
+                local_time = int(time.time() * 1000)
+                print(f"🕐 Using local time as fallback: {local_time}")
+                return local_time
 
     def _force_portfolio_update(self):
         try:
+            # Log timestamps before making the API call
+            server_time = self._get_server_time()
+            local_time = int(time.time() * 1000)
+            time_diff = local_time - server_time
+            print(f"🕐 Before portfolio update - Server: {server_time}, Local: {local_time}, Diff: {time_diff}ms")
+            
             account = self.trading_client.get_account()
             total_balance = 0
             usdt_balance = 0
@@ -109,12 +126,24 @@ class CryptoTrader:
             self.position = coin_balance
             self.last_account_update = time.time()
             
+            if coin_balance > 0 and not self.position_initialized:
+                self.add_log("info", f"Position initialized: {coin_balance:.6f} {self.symbol.replace('USDT', '')}")
+                if self.entry_price == 0 and hasattr(self, 'data_buffer') and self.data_buffer is not None:
+                    self.entry_price = self.data_buffer['close'].iloc[-1]
+                    self.add_log("info", f"Entry price set to current market price: {self.entry_price:.2f} USDT")
+                self.position_initialized = True
+            
             if self.initial_portfolio_value == 0:
                 self.initial_portfolio_value = total_balance
                 self.add_log("info", f"Initial portfolio value set: {self.initial_portfolio_value:.2f} USDT")
                     
         except Exception as e:
+            # Log timestamps when error occurs
+            server_time = self._get_server_time()
+            local_time = int(time.time() * 1000)
+            time_diff = local_time - server_time
             self.add_log("error", f"Failed to update portfolio: {e}")
+            print(f"🕐 Error timestamps - Server: {server_time}, Local: {local_time}, Diff: {time_diff}ms")
 
     def load_strategy(self):
         try:
@@ -772,6 +801,12 @@ class CryptoTrader:
         
         if current_time - self.last_account_update > 300:
             try:
+                # Log timestamps before making the API call
+                server_time = self._get_server_time()
+                local_time = int(time.time() * 1000)
+                time_diff = local_time - server_time
+                print(f"🕐 Before portfolio value update - Server: {server_time}, Local: {local_time}, Diff: {time_diff}ms")
+                
                 account = self.trading_client.get_account()
                 total_balance = 0
                 usdt_balance = 0
@@ -795,7 +830,12 @@ class CryptoTrader:
                 self.position = coin_balance
                 self.last_account_update = current_time
             except Exception as e:
+                # Log timestamps when error occurs
+                server_time = self._get_server_time()
+                local_time = int(time.time() * 1000)
+                time_diff = local_time - server_time
                 print(f"⚠️ Failed to update portfolio value: {e}")
+                print(f"🕐 Error timestamps - Server: {server_time}, Local: {local_time}, Diff: {time_diff}ms")
         
         return self.portfolio_value
     
@@ -1000,7 +1040,7 @@ class CryptoTrader:
             self.add_log("portfolio", f"Portfolio updated after sell: {self.portfolio_value:.2f} USDT")
             
             position_pnl_text = f"P&L: {position_pnl_percent:+.2f}% (${position_pnl_value:+.2f})" if position_pnl_percent != 0 else "P&L: N/A"
-            total_pnl_text = f"Total P&L: {total_pnl_percent:+.2f}% (${total_pnl_value:+.2f})" if total_pnl_percent != 0 else "Total P&L: N/A"
+            total_pnl_text = f"P&L: {total_pnl_percent:+.2f}% (${total_pnl_value:+.2f})" if total_pnl_percent != 0 else "Total P&L: N/A"
             notification_msg = f"🔴 SELL ORDER EXECUTED!\n{self.symbol.replace('USDT', '')}: {quantity:.6f} @ ${current_price:.2f}\nValue: ${quantity * current_price:.2f} USDT\nPosition P&L: {position_pnl_text}\nTotal P&L: {total_pnl_text}"
             self.push_notification(notification_msg)
             
@@ -1035,21 +1075,25 @@ class CryptoTrader:
             return {'entry': False, 'exit': False}
 
     def push_notification(self, message):
-        """Send a push notification via Pushover"""
+        """Send a push notification via ntfy"""
         try:
-            pushover_token = os.getenv("PUSHOVER_TOKEN")
-            pushover_user = os.getenv("PUSHOVER_USER")
-            pushover_url = "https://api.pushover.net/1/messages.json"
+            ntfy_topic = os.getenv("NTFY_TOPIC")
+            ntfy_server = os.getenv("NTFY_SERVER", "https://ntfy.sh")
             
-            if pushover_token and pushover_user:
-                requests.post(pushover_url, data={
-                    "token": pushover_token, 
-                    "user": pushover_user, 
-                    "message": message
-                })
-                print(f"📱 Push notification sent: {message}")
+            if ntfy_topic:
+                ntfy_url = f"{ntfy_server}/{ntfy_topic}"
+                
+                full_message = f"🚀 {message}"
+                
+                response = requests.post(ntfy_url, data=full_message.encode(encoding='utf-8'))
+                if response.status_code == 200:
+                    print(f"📱 Push notification sent: {message}")
+                else:
+                    print(f"❌ Failed to send notification: {response.status_code} - {response.text}")
             else:
                 print(f"⚠️ Push notification not configured: {message}")
+                
         except Exception as e:
             print(f"❌ Failed to send push notification: {e}")
-            
+
+                

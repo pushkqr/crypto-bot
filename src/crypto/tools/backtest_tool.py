@@ -131,9 +131,9 @@ class BacktestTool(BaseTool):
         total_return = profit_percent
         trade_count = trades
 
-        if profit_percent > 10 and max_drawdown_percent > -30:
+        if profit_percent > 3 and max_drawdown_percent > -10:
             recommendation = "Keep"
-        elif profit_percent < 0:
+        elif profit_percent < 1:
             recommendation = "Discard"
         else:
             recommendation = "Modify"
