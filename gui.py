@@ -63,7 +63,7 @@ class CryptoTraderView:
                 headers=["Timestamp", "Symbol", "Quantity", "Price", "Type", "Value", "P&L"],
                 row_count=(10, "dynamic"),
                 col_count=7,
-                max_height=250,
+                max_height=400,
                 elem_classes=["dataframe-fix"],
                 show_label=False
             )

@@ -75,30 +75,17 @@ def run_gui():
         
         ui = create_crypto_ui()
         
-        # Run in background thread
-        def launch_gradio():
-            ui.launch(
-                inbrowser=False,  
-                server_name="0.0.0.0", 
-                server_port=7860,
-                share=False,
-                show_error=True,
-                prevent_thread_lock=True,
-                quiet=False
-            )
-        
-        gradio_thread = threading.Thread(target=launch_gradio, daemon=True)
-        gradio_thread.start()
-        
-        print("✅ Dashboard started in background")
+        print("✅ Dashboard starting...")
         print("🌐 Access at: http://localhost:7860")
         
-       
-        try:
-            while True:
-                time.sleep(1)
-        except KeyboardInterrupt:
-            print("\n🛑 Shutting down...")
+        ui.launch(
+            inbrowser=True,  
+            server_name="0.0.0.0", 
+            server_port=7860,
+            share=False,
+            show_error=True,
+            prevent_thread_lock=False
+        )
             
     except Exception as e:
         print(f"\n❌ Error starting dashboard: {e}")
