@@ -1007,10 +1007,10 @@ class CryptoTrader:
             position_pnl_percent = 0
             position_pnl_value = 0
             if self.entry_price > 0:
-                pnl_percent = ((current_price - self.entry_price) / self.entry_price) * 100
-                pnl_value = (current_price - self.entry_price) * quantity
-                print(f"   P&L: {pnl_percent:+.2f}% ({pnl_value:+.2f} USDT)")
-                self.add_log("trade", f"P&L: {pnl_percent:+.2f}% ({pnl_value:+.2f} USDT)")
+                position_pnl_percent = ((current_price - self.entry_price) / self.entry_price) * 100
+                position_pnl_value = (current_price - self.entry_price) * quantity
+                print(f"   P&L: {position_pnl_percent:+.2f}% ({position_pnl_value:+.2f} USDT)")
+                self.add_log("trade", f"P&L: {position_pnl_percent:+.2f}% ({position_pnl_value:+.2f} USDT)")
             
             total_pnl_percent = 0
             total_pnl_value = 0
