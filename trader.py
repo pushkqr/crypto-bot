@@ -606,8 +606,18 @@ class CryptoTrader:
             
             allocation = self.strategy.get('allocation', 0)
             print(f"⚙️  Allocation: {allocation}%")
-            print(f"🛡️  Stop Loss: {self.strategy.get('stop_loss', 0)}%")
-            print(f"🎯 Take Profit: {self.strategy.get('take_profit', 0)}%")
+                
+            if self.position > 0 and self.entry_price > 0:
+                stop_loss_percent = self.strategy.get('stop_loss', 0)
+                take_profit_percent = self.strategy.get('take_profit', 0)
+                stop_loss_price = self.entry_price * (1 - stop_loss_percent / 100)
+                take_profit_price = self.entry_price * (1 + take_profit_percent / 100)
+                
+                print(f"🛡️  Stop Loss: {stop_loss_percent}% (${stop_loss_price:.2f})")
+                print(f"🎯 Take Profit: {take_profit_percent}% (${take_profit_price:.2f})")
+            else:
+                print(f"🛡️  Stop Loss: {self.strategy.get('stop_loss', 0)}%")
+                print(f"🎯 Take Profit: {self.strategy.get('take_profit', 0)}%")
         
         print(f"{'='*60}\n")
 
@@ -633,12 +643,41 @@ class CryptoTrader:
         signals = self.check_strategy_signals(self.strategy)
         
         latest = self.get_latest_data()
+        current_price = latest['close']
+        
         print(f"\n🔍 SIGNAL DEBUG:")
         print(f"   Open: {latest['open']:.2f}")
         print(f"   Close: {latest['close']:.2f}")
         print(f"   Current Position: {self.position:.6f}")
         print(f"   Entry Signal: {signals['entry']}")
         print(f"   Exit Signal: {signals['exit']}")
+        
+        if self.position > 0 and self.entry_price > 0:
+            stop_loss_percent = self.strategy.get('stop_loss', 0)
+            take_profit_percent = self.strategy.get('take_profit', 0)
+            
+            stop_loss_price = self.entry_price * (1 - stop_loss_percent / 100)
+            take_profit_price = self.entry_price * (1 + take_profit_percent / 100)
+            
+            if current_price <= stop_loss_price:
+                print(f"\n🛑 STOP LOSS TRIGGERED!")
+                print(f"   Entry Price: {self.entry_price:.2f}")
+                print(f"   Current Price: {current_price:.2f}")
+                print(f"   Stop Loss Price: {stop_loss_price:.2f}")
+                print(f"   Loss: {((current_price - self.entry_price) / self.entry_price) * 100:.2f}%")
+                self.add_log("strategy", f"🛑 STOP LOSS TRIGGERED! Loss: {((current_price - self.entry_price) / self.entry_price) * 100:.2f}%")
+                self.sell_order()
+                return
+            
+            if current_price >= take_profit_price:
+                print(f"\n🎯 TAKE PROFIT TRIGGERED!")
+                print(f"   Entry Price: {self.entry_price:.2f}")
+                print(f"   Current Price: {current_price:.2f}")
+                print(f"   Take Profit Price: {take_profit_price:.2f}")
+                print(f"   Profit: {((current_price - self.entry_price) / self.entry_price) * 100:.2f}%")
+                self.add_log("strategy", f"🎯 TAKE PROFIT TRIGGERED! Profit: {((current_price - self.entry_price) / self.entry_price) * 100:.2f}%")
+                self.sell_order()
+                return
         
         if signals['entry'] and self.position == 0:
             print(f"\n🎯 ENTRY SIGNAL DETECTED - Attempting to buy...")
@@ -801,7 +840,6 @@ class CryptoTrader:
         
         if current_time - self.last_account_update > 300:
             try:
-                # Log timestamps before making the API call
                 server_time = self._get_server_time()
                 local_time = int(time.time() * 1000)
                 time_diff = local_time - server_time
@@ -820,7 +858,6 @@ class CryptoTrader:
                             total_balance += free_amount
                         elif balance['asset'] == self.symbol.replace('USDT', ''):
                             coin_balance = free_amount
-                            # Calculate USDT value of coin holdings
                             if hasattr(self, 'data_buffer') and self.data_buffer is not None:
                                 current_price = self.data_buffer['close'].iloc[-1]
                                 total_balance += coin_balance * current_price
@@ -830,7 +867,6 @@ class CryptoTrader:
                 self.position = coin_balance
                 self.last_account_update = current_time
             except Exception as e:
-                # Log timestamps when error occurs
                 server_time = self._get_server_time()
                 local_time = int(time.time() * 1000)
                 time_diff = local_time - server_time
@@ -937,10 +973,13 @@ class CryptoTrader:
             if len(self.transactions) > 20:
                 self.transactions = self.transactions[-20:]
             
-            self.position = quantity
-            self.entry_price = current_price
-            
             self._force_portfolio_update()
+            
+            
+            if self.position > 0:  
+                self.entry_price = current_price
+                self.add_log("info", f"Entry price set: {self.entry_price:.2f} USDT")
+            
             self.add_log("portfolio", f"Portfolio updated after buy: {self.portfolio_value:.2f} USDT")
             
             notification_msg = f"🟢 BUY ORDER EXECUTED!\n{self.symbol.replace('USDT', '')}: {quantity:.6f} @ ${current_price:.2f}\nValue: ${quantity * current_price:.2f} USDT"
@@ -1033,10 +1072,12 @@ class CryptoTrader:
             if len(self.transactions) > 20:
                 self.transactions = self.transactions[-20:]
             
-            self.position = 0
-            self.entry_price = 0
-            
             self._force_portfolio_update()
+            
+            if self.position == 0:  
+                self.entry_price = 0
+                self.add_log("info", f"Entry price reset - position closed")
+            
             self.add_log("portfolio", f"Portfolio updated after sell: {self.portfolio_value:.2f} USDT")
             
             position_pnl_text = f"P&L: {position_pnl_percent:+.2f}% (${position_pnl_value:+.2f})" if position_pnl_percent != 0 else "P&L: N/A"

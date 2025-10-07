@@ -59,6 +59,16 @@ def run_crewai_workflow():
         print(f"❌ Error running CrewAI workflow: {e}")
         return False
 
+def trading_loop(trader):
+    print("🤖 Trading bot started independently")
+    while True:
+        try:
+            trader.refresh()
+            time.sleep(30)
+        except Exception as e:
+            print(f"❌ Trading error: {e}")
+            time.sleep(5)
+
 def run_gui():
     """Launch the crypto trading bot GUI"""
     try:
@@ -75,11 +85,17 @@ def run_gui():
         
         ui = create_crypto_ui()
         
+        trader = CryptoTrader("CryptoBot")
+        
+        trading_thread = threading.Thread(target=trading_loop, args=(trader,), daemon=True)
+        trading_thread.start()
+        
+        print("✅ Trading bot started independently")
         print("✅ Dashboard starting...")
         print("🌐 Access at: http://localhost:7860")
         
         ui.launch(
-            inbrowser=True,  
+            inbrowser=False,
             server_name="0.0.0.0", 
             server_port=7860,
             share=False,
